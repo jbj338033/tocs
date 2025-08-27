@@ -1,0 +1,368 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  projects      ProjectMember[]
+  histories     History[]
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Account {
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@id([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  version     String?
+  slug        String   @unique
+  isPublic    Boolean  @default(false) @map("is_public")
+  servers     Json?    @db.Json
+  
+  members     ProjectMember[]
+  folders     Folder[]
+  endpoints   Endpoint[]
+  schemas     Schema[]
+  variables   Variable[]
+  importConfigs ImportConfig[]
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  projectId String      @map("project_id")
+  role      MemberRole  @default(VIEWER)
+  
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime    @default(now()) @map("created_at")
+  
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@map("project_members")
+}
+
+model Folder {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  projectId   String     @map("project_id")
+  parentId    String?    @map("parent_id")
+  order       Int        @default(0)
+  
+  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      Folder?    @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Folder[]   @relation("FolderHierarchy")
+  endpoints   Endpoint[]
+  
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([parentId])
+  @@map("folders")
+}
+
+model Endpoint {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  type         EndpointType  @default(HTTP)
+  method       HttpMethod?
+  path         String
+  projectId    String        @map("project_id")
+  folderId     String?       @map("folder_id")
+  order        Int           @default(0)
+  
+  // GraphQL specific
+  query        String?       @db.Text
+  variables    Json?
+  
+  // WebSocket specific
+  wsUrl        String?       @map("ws_url")
+  wsProtocol   String?       @map("ws_protocol")
+  
+  // gRPC specific
+  protoFile    String?       @map("proto_file") @db.Text
+  serviceName  String?       @map("service_name")
+  methodName   String?       @map("method_name")
+  
+  headers      EndpointHeader[]
+  parameters   EndpointParameter[]
+  body         EndpointBody?
+  responses    EndpointResponse[]
+  histories    History[]
+  events       EndpointEvent[]
+  
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folder       Folder?       @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([folderId])
+  @@map("endpoints")
+}
+
+model EndpointHeader {
+  id          String   @id @default(cuid())
+  endpointId  String   @map("endpoint_id")
+  key         String
+  value       String?
+  description String?
+  required    Boolean  @default(false)
+  
+  endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  
+  @@index([endpointId])
+  @@map("endpoint_headers")
+}
+
+model EndpointParameter {
+  id          String        @id @default(cuid())
+  endpointId  String        @map("endpoint_id")
+  name        String
+  type        ParameterType
+  location    ParameterLocation
+  description String?
+  required    Boolean       @default(false)
+  defaultValue String?      @map("default_value")
+  example     String?
+  
+  endpoint    Endpoint      @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  
+  @@index([endpointId])
+  @@map("endpoint_parameters")
+}
+
+model EndpointBody {
+  id          String      @id @default(cuid())
+  endpointId  String      @unique @map("endpoint_id")
+  contentType String      @map("content_type")
+  schema      String?     @db.Text
+  example     String?     @db.Text
+  description String?
+  
+  endpoint    Endpoint    @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  
+  @@map("endpoint_bodies")
+}
+
+model EndpointResponse {
+  id          String   @id @default(cuid())
+  endpointId  String   @map("endpoint_id")
+  statusCode  Int      @map("status_code")
+  description String?
+  contentType String?  @map("content_type")
+  schema      String?  @db.Text
+  example     String?  @db.Text
+  
+  endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  
+  @@index([endpointId])
+  @@map("endpoint_responses")
+}
+
+enum MemberRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  DELETE
+  PATCH
+  HEAD
+  OPTIONS
+}
+
+enum EndpointType {
+  HTTP
+  GRAPHQL
+  WEBSOCKET
+  SOCKETIO
+  GRPC
+  STOMP
+  MQTT
+  SSE
+  OVERVIEW
+}
+
+enum ParameterType {
+  STRING
+  INTEGER
+  NUMBER
+  BOOLEAN
+  ARRAY
+  OBJECT
+}
+
+enum ParameterLocation {
+  QUERY
+  PATH
+  HEADER
+  COOKIE
+}
+
+model Variable {
+  id          String      @id @default(cuid())
+  key         String
+  value       String      @db.Text
+  projectId   String      @map("project_id")
+  
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  
+  @@unique([projectId, key])
+  @@index([projectId])
+  @@map("variables")
+}
+
+model History {
+  id            String        @id @default(cuid())
+  endpointId    String        @map("endpoint_id")
+  userId        String        @map("user_id")
+  
+  method        HttpMethod
+  url           String        @db.Text
+  headers       Json?         @db.Json
+  params        Json?         @db.Json
+  body          String?       @db.Text
+  
+  status        Int
+  statusText    String        @map("status_text")
+  responseTime  Int           @map("response_time")
+  responseSize  Int           @map("response_size")
+  responseHeaders Json?       @map("response_headers") @db.Json
+  responseBody  String?       @map("response_body") @db.Text
+  
+  endpoint      Endpoint      @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime      @default(now()) @map("created_at")
+  
+  @@index([endpointId])
+  @@index([userId])
+  @@map("histories")
+}
+
+model Schema {
+  id          String   @id @default(cuid())
+  projectId   String   @map("project_id")
+  name        String
+  description String?
+  type        String   // request, response, shared
+  schema      Json     @db.Json
+  examples    Json?    @db.Json
+  
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([projectId, name])
+  @@index([projectId])
+  @@map("schemas")
+}
+
+model EndpointEvent {
+  id          String   @id @default(cuid())
+  endpointId  String   @map("endpoint_id")
+  name        String
+  eventType   String   @map("event_type") // emit, listen
+  description String?
+  payload     Json?    @db.Json
+  
+  endpoint    Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([endpointId])
+  @@map("endpoint_events")
+}
+
+model ImportConfig {
+  id          String   @id @default(cuid())
+  projectId   String   @map("project_id")
+  name        String
+  type        String   // openapi, postman, insomnia, graphql
+  sourceUrl   String?  @map("source_url")
+  config      Json?    @db.Json
+  lastImport  DateTime? @map("last_import")
+  
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([projectId])
+  @@map("import_configs")
+}
