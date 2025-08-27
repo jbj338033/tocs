@@ -1,0 +1,1 @@
+export { EndpointDetail } from "./ui/endpoint-detail"
