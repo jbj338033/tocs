@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Endpoint } from "@/entities/folder"
 import { VariableInput } from "@/shared/ui/components/VariableInput"
+import { CodeEditor } from "@/shared/ui/components/CodeEditor"
 import { Play, Square, Send, Trash2, Zap, Circle, Plus, X } from "@/shared/ui/icons"
 import { DetailButton, ProtocolBadge, ConnectionStatus, IconButton } from "@/shared/ui/components"
 import { Variable } from "@/entities/variable"
@@ -72,7 +73,6 @@ export function SocketIOEndpointDetail({ projectId, endpoint, variables, project
     try {
       let fullUrl = replaceVariables(socketUrl)
       
-      // Handle relative URLs
       if (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://') && !fullUrl.startsWith('ws://') && !fullUrl.startsWith('wss://')) {
         const serverUrl = getServerUrl()
         fullUrl = new URL(fullUrl, serverUrl).toString()

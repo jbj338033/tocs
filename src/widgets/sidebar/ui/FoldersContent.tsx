@@ -785,40 +785,8 @@ export function FoldersContent({
             strategy={verticalListSortingStrategy}
           >
             {folders.length === 0 && endpoints.length === 0 ? (
-              <div className="px-3 py-6">
-                <div className="text-center mb-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <HttpIcon size={20} className="text-gray-400" />
-                  </div>
-                  <h4 className="text-[14px] font-medium text-gray-900 mb-1">API 문서 작성을 시작하세요</h4>
-                  <p className="text-[12px] text-gray-500">새 엔드포인트를 만들거나 사이드바에서 기존 API를 선택하세요</p>
-                </div>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => createEndpoint()}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 group"
-                  >
-                    <HttpIcon size={14} className="text-[#0064FF]" />
-                    <span className="flex-1 text-left">Create HTTP Request</span>
-                    <span className="text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">⌘N</span>
-                  </button>
-                  <button
-                    onClick={() => createFolder()}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200 group"
-                  >
-                    <FolderIcon size={14} className="text-orange-500" />
-                    <span className="flex-1 text-left">Create Folder</span>
-                    <span className="text-[11px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">⌘⇧N</span>
-                  </button>
-                  <div className="text-center mt-4">
-                    <button
-                      onClick={() => setShowAddMenu(true)}
-                      className="text-[12px] text-blue hover:underline"
-                    >
-                      More options →
-                    </button>
-                  </div>
-                </div>
+              <div className="px-3 py-4">
+                <p className="text-[12px] text-gray-400">No endpoints</p>
               </div>
             ) : (
               <div className="py-1">

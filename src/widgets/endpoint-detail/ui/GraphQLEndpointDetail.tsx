@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Endpoint } from "@/entities/folder"
 import { VariableInput } from "@/shared/ui/components/VariableInput"
+import { CodeEditor } from "@/shared/ui/components/CodeEditor"
+import { ResponseViewer } from "@/shared/ui/components/ResponseViewer"
 import { Play, Copy, FileCode } from "@/shared/ui/icons"
 import { DetailButton, ProtocolBadge, IconButton } from "@/shared/ui/components"
 import { Variable } from "@/entities/variable"
@@ -122,13 +124,11 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
     <RequestSection>
       <div className="h-full flex flex-col">
         <div className="flex-1 p-4">
-          <VariableInput
+          <CodeEditor
             value={query}
             onChange={setQuery}
-            placeholder="query { users { id name email } }"
+            language="graphql"
             variables={variables}
-            multiline
-            className="w-full h-full p-3 font-mono text-[12px] resize-none border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] bg-gray-50 focus:bg-white"
           />
         </div>
         <div className="px-4 pb-4">
@@ -158,13 +158,11 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
   const VariablesContent = (
     <RequestSection>
       <div className="h-full p-4">
-        <VariableInput
+        <CodeEditor
           value={graphqlVariables}
           onChange={setGraphqlVariables}
-          placeholder='{\n  "id": 123,\n  "name": "John"\n}'
+          language="json"
           variables={variables}
-          multiline
-          className="w-full h-full p-3 font-mono text-[12px] resize-none border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] bg-gray-50 focus:bg-white"
         />
       </div>
     </RequestSection>
@@ -238,9 +236,19 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
       responseTime={responseTime ?? undefined}
       responseContent={
         <ResponseSection>
-          <pre className="text-[12px] font-mono text-gray-600 whitespace-pre-wrap">
-            {response || 'Execute query to see response'}
-          </pre>
+          <div className="h-full -m-4">
+            <ResponseViewer 
+              response={response ? {
+                status: responseStatus || 0,
+                statusText: responseStatus && responseStatus < 400 ? 'OK' : 'Error',
+                headers: {},
+                body: response,
+                time: responseTime || 0,
+                size: new Blob([response]).size
+              } : null}
+              isLoading={isLoading}
+            />
+          </div>
         </ResponseSection>
       }
       responseActions={

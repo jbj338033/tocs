@@ -33,7 +33,7 @@ export function VariableInput({
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
   const filteredVariables = variables.filter(v => {
-    if (!searchTerm && showSuggestions) return true // Show all when @ is typed
+    if (!searchTerm && showSuggestions) return true
     return v.key.toLowerCase().includes(searchTerm.toLowerCase())
   })
 
@@ -56,7 +56,6 @@ export function VariableInput({
 
     const beforeCursor = newValue.substring(0, newCursorPos)
     
-    // Support both {{ and @ triggers
     const doubleMatch = beforeCursor.match(/\{\{([^}]*)$/)
     const atMatch = beforeCursor.match(/@(\w*)$/)
     

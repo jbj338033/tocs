@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, ChevronDown, Plus, Search, Folder as FolderIcon, HttpIcon, GraphQLIcon, WebSocketIcon, SocketIOIcon, GRPCIcon } from "@/shared/ui/icons"
+import { ChevronRight, ChevronDown, Plus, Folder as FolderIcon, HttpIcon, GraphQLIcon, WebSocketIcon, SocketIOIcon, GRPCIcon } from "@/shared/ui/icons"
 import { useUIStore } from "@/shared/stores/ui"
 import { useTabStore } from "@/shared/stores"
 import { EndpointApi } from "@/entities/folder"
@@ -20,7 +20,6 @@ export function ApisPanel({ project, onOpenOverview }: ApisPanelProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["endpoints", "schemas"])
   )
-  const [searchQuery, setSearchQuery] = useState("")
   const [showEndpointMenu, setShowEndpointMenu] = useState(false)
   const { openModal } = useUIStore()
   const { selectedServerId, setSelectedServerId } = useProjectStore()
@@ -50,7 +49,7 @@ export function ApisPanel({ project, onOpenOverview }: ApisPanelProps) {
 
       const defaultValues: any = {
         name: typeNames[type] || "New Endpoint",
-        path: type === "HTTP" ? "/api/" : "",
+        path: "",
         description: "",
         type,
       }
@@ -98,18 +97,6 @@ export function ApisPanel({ project, onOpenOverview }: ApisPanelProps) {
         selectedServerId={selectedServerId || 0}
         onServerSelect={setSelectedServerId}
       />
-      <div className="px-3 py-3 border-b border-gray-100 flex-shrink-0">
-        <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search APIs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] transition-colors"
-          />
-        </div>
-      </div>
 
       <div className="flex-1 overflow-y-auto">
         <div className="px-3 pt-2">
@@ -151,25 +138,17 @@ export function ApisPanel({ project, onOpenOverview }: ApisPanelProps) {
               <FolderIcon size={14} className="text-orange-500" />
               <span className="text-[13px] font-medium text-gray-900">Endpoints</span>
             </button>
-            <div className="flex items-center gap-0.5">
+            <div className="relative">
               <button
-                onClick={() => openModal("newFolder")}
+                onClick={() => setShowEndpointMenu(!showEndpointMenu)}
                 className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                title="New Folder"
+                title="New"
               >
-                <FolderIcon size={12} className="text-gray-400" />
+                <Plus size={12} className="text-gray-400" />
               </button>
-              <div className="relative">
-                <button
-                  onClick={() => setShowEndpointMenu(!showEndpointMenu)}
-                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                  title="New Endpoint"
-                >
-                  <Plus size={12} className="text-gray-400" />
-                </button>
-                
-                {showEndpointMenu && (
-                  <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-48">
+              
+              {showEndpointMenu && (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-48">
                     <button
                       onClick={async () => {
                         setShowEndpointMenu(false)
@@ -259,11 +238,21 @@ export function ApisPanel({ project, onOpenOverview }: ApisPanelProps) {
                       </svg>
                       <span className="text-[12px] text-gray-700">Server-Sent Events</span>
                     </button>
+                    <div className="border-t border-gray-200 my-1" />
+                    <button
+                      onClick={() => {
+                        setShowEndpointMenu(false)
+                        window.dispatchEvent(new CustomEvent('createInlineFolder'))
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <FolderIcon size={12} className="text-orange-500" />
+                      <span className="text-[12px] text-gray-700">New Folder</span>
+                    </button>
                   </div>
                 )}
               </div>
             </div>
-          </div>
           {expandedSections.has("endpoints") && (
             <div className="mt-1">
               <EndpointsPanel projectId={project.id} />

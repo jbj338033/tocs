@@ -63,7 +63,8 @@ export const useProjectStore = create<ProjectState>()(
 
       getSelectedServerUrl: () => {
         const state = get();
-        const server = state.currentProject?.servers?.[state.selectedServerId] || state.currentProject?.servers?.[0];
+        const servers = state.currentProject?.servers || state.servers;
+        const server = servers?.[state.selectedServerId] || servers?.[0];
         return server?.url || null;
       },
     }),

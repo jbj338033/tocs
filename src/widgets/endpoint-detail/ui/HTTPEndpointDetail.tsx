@@ -6,6 +6,8 @@ import { Variable, VariableApi } from "@/entities/variable"
 import { Project } from "@/entities/project"
 import { HistoryApi } from "@/entities/test"
 import { VariableInput } from "@/shared/ui/components/VariableInput"
+import { CodeEditor } from "@/shared/ui/components/CodeEditor"
+import { ResponseViewer } from "@/shared/ui/components/ResponseViewer"
 import { DetailButton, ProtocolBadge, IconButton } from "@/shared/ui/components"
 import { Play, Copy } from "@/shared/ui/icons"
 import { interpolateVariables } from "@/shared/lib/variables"
@@ -23,11 +25,13 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
   const { getSelectedServerUrl } = useProjectStore()
   const [httpUrl, setHttpUrl] = useState('')
   const [activeTab, setActiveTab] = useState<'params' | 'headers' | 'body'>('params')
-  const [response, setResponse] = useState('')
+  const [response, setResponse] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [responseTime, setResponseTime] = useState<number | null>(null)
   const [responseStatus, setResponseStatus] = useState<number | null>(null)
+  const [responseHeaders, setResponseHeaders] = useState<Record<string, string>>({})
   const [responseUrl, setResponseUrl] = useState('')
+  const [responseSize, setResponseSize] = useState(0)
   
   const [params, setParams] = useState<Array<{ key: string; value: string; enabled: boolean }>>([])
   const [headers, setHeaders] = useState<Array<{ key: string; value: string; enabled: boolean }>>([
@@ -108,42 +112,52 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
         }
       })
       
-      const requestOptions: RequestInit = {
-        method: endpoint.method || 'GET',
-        headers: enabledHeaders,
-        mode: 'cors',
-        credentials: 'include'
-      }
-      
+      let requestBody
       if (['POST', 'PUT', 'PATCH'].includes(endpoint.method || '')) {
         if (body) {
-          requestOptions.body = interpolateVariables(body, variables)
+          const interpolated = interpolateVariables(body, variables)
+          try {
+            requestBody = JSON.parse(interpolated)
+          } catch {
+            requestBody = interpolated
+          }
         }
       }
-      
-      const response = await fetch(url, requestOptions)
-      const responseHeaders: Record<string, string> = {}
-      response.headers.forEach((value, key) => {
-        responseHeaders[key] = value
+
+      const proxyRes = await fetch('/api/proxy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          method: endpoint.method || 'GET',
+          headers: enabledHeaders,
+          body: requestBody
+        })
       })
-      
-      const contentType = response.headers.get('content-type') || ''
-      let responseBody = ''
-      
-      if (contentType.includes('application/json')) {
-        const json = await response.json()
-        responseBody = JSON.stringify(json, null, 2)
-      } else if (contentType.includes('text/')) {
-        responseBody = await response.text()
-      } else {
-        responseBody = 'Binary response (not displayed)'
-      }
-      
+
+      const data = await proxyRes.json()
       const endTime = Date.now()
-      
-      setResponse(responseBody)
+
+      if (!proxyRes.ok) {
+        throw new Error(data.error || 'Request failed')
+      }
+
+      const responseBody = typeof data.body === 'string' 
+        ? data.body 
+        : JSON.stringify(data.body, null, 2)
+
+      setResponse({
+        status: data.status,
+        statusText: data.statusText,
+        headers: data.headers,
+        body: responseBody,
+        time: endTime - startTime,
+        size: data.size
+      })
       setResponseTime(endTime - startTime)
-      setResponseStatus(response.status)
+      setResponseStatus(data.status)
+      setResponseHeaders(data.headers)
+      setResponseSize(data.size)
       
       await HistoryApi.createHistory(projectId, endpoint.id, {
         method: endpoint.method || 'GET',
@@ -151,19 +165,29 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
         headers: enabledHeaders,
         params: Object.fromEntries(params.filter(p => p.enabled).map(p => [p.key, p.value])),
         body: body || undefined,
-        status: response.status,
-        statusText: response.statusText,
+        status: data.status,
+        statusText: data.statusText,
         responseTime: endTime - startTime,
-        responseSize: new Blob([responseBody]).size,
-        responseHeaders,
+        responseSize: data.size,
+        responseHeaders: data.headers,
         responseBody
       })
       
     } catch (error) {
-      setResponse(JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Unknown error',
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorBody = JSON.stringify({ 
+        error: errorMessage,
         type: "NetworkError"
-      }, null, 2))
+      }, null, 2)
+      
+      setResponse({
+        status: 0,
+        statusText: 'Network Error',
+        headers: {},
+        body: errorBody,
+        time: Date.now() - startTime,
+        size: new Blob([errorBody]).size
+      })
       setResponseStatus(0)
     } finally {
       setIsLoading(false)
@@ -229,17 +253,16 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
   const BodyContent = (
     <RequestSection>
       <div className="h-full p-4">
-        <VariableInput
+        <CodeEditor
           value={body}
           onChange={setBody}
-          placeholder='{\n  "key": "value"\n}'
+          language="json"
           variables={variables}
-          multiline
-          className="w-full h-full p-3 font-mono text-[12px] resize-none border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] bg-gray-50 focus:bg-white"
         />
       </div>
     </RequestSection>
   )
+
 
   const shouldShowBody = ['POST', 'PUT', 'PATCH'].includes(endpoint.method || '')
 
@@ -296,40 +319,14 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       }
       responseTime={responseTime ?? undefined}
       responseContent={
-        <ResponseSection>
-          {responseUrl && (
-            <div className="mb-4 pb-4 border-b border-gray-100">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] text-gray-500 font-medium uppercase">Request URL</span>
-                <IconButton
-                  onClick={() => navigator.clipboard.writeText(responseUrl)}
-                  size="sm"
-                  title="Copy URL"
-                >
-                  <Copy size={11} />
-                </IconButton>
-              </div>
-              <div className="font-mono text-[11px] text-gray-600 break-all bg-gray-50 p-2 rounded">
-                {responseUrl}
-              </div>
-            </div>
-          )}
-          <pre className="text-[12px] font-mono text-gray-600 whitespace-pre-wrap">
-            {response || 'Send request to see response'}
-          </pre>
-        </ResponseSection>
+        <div className="h-full">
+          <ResponseViewer 
+            response={response}
+            isLoading={isLoading}
+          />
+        </div>
       }
-      responseActions={
-        response && (
-          <IconButton
-            onClick={() => navigator.clipboard.writeText(response)}
-            size="sm"
-            title="Copy response"
-          >
-            <Copy size={12} />
-          </IconButton>
-        )
-      }
+      responseActions={null}
     />
   )
 }

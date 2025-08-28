@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Endpoint } from "@/entities/folder"
 import { VariableInput } from "@/shared/ui/components/VariableInput"
+import { CodeEditor } from "@/shared/ui/components/CodeEditor"
 import { Play, Square, Send, Trash2, Plus, X } from "@/shared/ui/icons"
 import { DetailButton, ProtocolBadge, ConnectionStatus, IconButton } from "@/shared/ui/components"
 import { Variable } from "@/entities/variable"
@@ -75,7 +76,6 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
     try {
       let fullUrl = replaceVariables(wsUrl)
       
-      // Handle relative URLs
       if (!fullUrl.startsWith('ws://') && !fullUrl.startsWith('wss://')) {
         const serverUrl = getServerUrl()
         fullUrl = new URL(fullUrl, serverUrl).toString()
@@ -158,14 +158,15 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
         <div className="p-4 space-y-4 flex-1">
           <div className="space-y-2">
             <label className="text-[12px] font-medium text-gray-700">Send Message</label>
-            <VariableInput
-              value={messageInput}
-              onChange={setMessageInput}
-              placeholder='{"action": "subscribe", "channel": "updates"}'
-              variables={variables}
-              multiline
-              className="w-full h-[120px] p-3 font-mono text-[12px] resize-none border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] bg-gray-50 focus:bg-white"
-            />
+            <div className="h-[120px]">
+              <CodeEditor
+                value={messageInput}
+                onChange={setMessageInput}
+                language="json"
+                variables={variables}
+                height="120px"
+              />
+            </div>
             <DetailButton
               onClick={handleSendMessage}
               disabled={!isConnected || !messageInput.trim()}

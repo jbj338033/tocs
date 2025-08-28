@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import mqtt, { MqttClient } from "mqtt"
 import { Endpoint } from "@/entities/folder"
 import { VariableInput } from "@/shared/ui/components/VariableInput"
+import { CodeEditor } from "@/shared/ui/components/CodeEditor"
 import { Play, Square, Send, Trash2, Plus, X, Circle, Lock } from "@/shared/ui/icons"
 import { DetailButton, ProtocolBadge, ConnectionStatus, IconButton } from "@/shared/ui/components"
 import { Variable } from "@/entities/variable"
@@ -286,14 +287,14 @@ export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: 
         
         <div>
           <label className="text-[11px] font-medium text-gray-500 uppercase mb-1 block">Payload</label>
-          <VariableInput
-            value={publishPayload}
-            onChange={setPublishPayload}
-            placeholder='{"temperature": 23.5, "humidity": 45}'
-            variables={variables}
-            multiline
-            className="w-full h-[150px] p-3 font-mono text-[12px] resize-none border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] bg-gray-50 focus:bg-white"
-          />
+          <div style={{ height: '150px' }}>
+            <CodeEditor
+              value={publishPayload}
+              onChange={setPublishPayload}
+              language="json"
+              variables={variables}
+            />
+          </div>
         </div>
         
         <div className="flex gap-4">

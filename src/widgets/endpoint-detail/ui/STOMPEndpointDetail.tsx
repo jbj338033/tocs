@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Client, IFrame } from '@stomp/stompjs'
 import { Endpoint } from "@/entities/folder"
 import { VariableInput } from "@/shared/ui/components/VariableInput"
+import { CodeEditor } from "@/shared/ui/components/CodeEditor"
 import { Play, Square, Send, Trash2, Plus, X, Circle } from "@/shared/ui/icons"
 import { DetailButton, ProtocolBadge, ConnectionStatus, IconButton } from "@/shared/ui/components"
 import { Variable } from "@/entities/variable"
@@ -278,14 +279,14 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
           
           <div className="flex-1">
             <label className="text-[11px] font-medium text-gray-500 uppercase mb-1 block">Message Body</label>
-            <VariableInput
-              value={messageBody}
-              onChange={setMessageBody}
-              placeholder='{"action": "update", "data": {...}}'
-              variables={variables}
-              multiline
-              className="w-full h-[200px] p-3 font-mono text-[12px] resize-none border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] bg-gray-50 focus:bg-white"
-            />
+            <div style={{ height: '200px' }}>
+              <CodeEditor
+                value={messageBody}
+                onChange={setMessageBody}
+                language="json"
+                variables={variables}
+              />
+            </div>
           </div>
           
           <DetailButton
