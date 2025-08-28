@@ -9,7 +9,9 @@ import { DetailButton, ProtocolBadge, ConnectionStatus, IconButton } from "@/sha
 import { Variable } from "@/entities/variable"
 import { Project } from "@/entities/project"
 import { interpolateVariables } from "@/shared/lib/variables"
-import { UnifiedProtocolDetail, RequestSection, ResponseSection, MessageList } from "./UnifiedProtocolDetail"
+import { UnifiedProtocolDetail, RequestSection, ResponseSection } from "./UnifiedProtocolDetail"
+import { UnifiedResponse } from "./UnifiedResponse"
+import { styles } from "./styles"
 import { useProjectStore } from "@/shared/stores"
 
 interface WebSocketEndpointDetailProps {
@@ -156,9 +158,9 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
   const MessagesContent = (
     <RequestSection>
       <div className="h-full flex flex-col">
-        <div className="p-4 space-y-4 flex-1">
+        <div className={`${styles.contentPadding} ${styles.sectionSpacing} flex-1`}>
           <div className="space-y-2">
-            <label className="text-[12px] font-medium text-gray-700">Send Message</label>
+            <label className={styles.label}>Send Message</label>
             <div className="h-[120px]">
               <CodeEditor
                 value={messageInput}
@@ -173,31 +175,9 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
               disabled={!isConnected || !messageInput.trim()}
               className="w-full"
             >
-              <Send size={12} />
+              <Send size={styles.iconSize} />
               Send Message
             </DetailButton>
-          </div>
-
-          <div className="pt-4 border-t border-gray-100">
-            <h4 className="text-[12px] font-medium text-gray-700 mb-3">Statistics</h4>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 bg-gray-50 rounded border border-gray-100">
-                <div className="text-[11px] text-gray-500 uppercase">Total</div>
-                <div className="text-[16px] font-semibold text-gray-900 mt-1">{messages.length}</div>
-              </div>
-              <div className="p-3 bg-blue-50 rounded border border-blue-100">
-                <div className="text-[11px] text-blue-600 uppercase">Sent</div>
-                <div className="text-[16px] font-semibold text-blue-700 mt-1">
-                  {messages.filter(m => m.type === 'sent').length}
-                </div>
-              </div>
-              <div className="p-3 bg-green-50 rounded border border-green-100">
-                <div className="text-[11px] text-green-600 uppercase">Received</div>
-                <div className="text-[16px] font-semibold text-green-700 mt-1">
-                  {messages.filter(m => m.type === 'received').length}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -313,20 +293,22 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
         )
       }
       responseContent={
-        <ResponseSection>
-          <MessageList messages={messages} className="bg-gray-50 -m-4" />
+        <>
+          <UnifiedResponse 
+            type="streaming"
+            messages={messages}
+            showStats={true}
+            stats={{
+              total: messages.length,
+              sent: messages.filter(m => m.type === 'sent').length,
+              received: messages.filter(m => m.type === 'received').length
+            }}
+            onClear={clearMessages}
+          />
           <div ref={messagesEndRef} />
-        </ResponseSection>
+        </>
       }
-      responseActions={
-        <IconButton
-          onClick={clearMessages}
-          title="Clear messages"
-          size="sm"
-        >
-          <Trash2 size={12} />
-        </IconButton>
-      }
+      responseActions={null}
     />
   )
 }

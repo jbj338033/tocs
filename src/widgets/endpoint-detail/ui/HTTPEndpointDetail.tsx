@@ -12,6 +12,9 @@ import { DetailButton, ProtocolBadge, IconButton } from "@/shared/ui/components"
 import { Play, Copy } from "@/shared/ui/icons"
 import { interpolateVariables } from "@/shared/lib/variables"
 import { UnifiedProtocolDetail, RequestSection, ResponseSection, KeyValueEditor } from "./UnifiedProtocolDetail"
+import { UnifiedResponse } from "./UnifiedResponse"
+import { UnifiedConnectionStatus } from "./UnifiedConnectionStatus"
+import { styles } from "./styles"
 import { useProjectStore } from "@/shared/stores"
 
 interface HTTPEndpointDetailProps {
@@ -266,7 +269,7 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
 
   const BodyContent = (
     <RequestSection>
-      <div className="h-full p-4">
+      <div className={`h-full ${styles.contentPadding}`}>
         <CodeEditor
           value={body}
           onChange={setBody}
@@ -279,13 +282,13 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
   
   const AuthContent = (
     <RequestSection>
-      <div className="p-4 space-y-4">
+      <div className={`${styles.contentPadding} ${styles.sectionSpacing}`}>
         <div>
-          <label className="text-[12px] font-medium text-gray-700 mb-2 block">Auth Type</label>
+          <label className={styles.label}>Auth Type</label>
           <select
             value={authType}
             onChange={(e) => setAuthType(e.target.value as any)}
-            className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+            className={styles.select}
           >
             <option value="none">No Auth</option>
             <option value="bearer">Bearer Token</option>
@@ -295,13 +298,13 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
         
         {authType === 'bearer' && (
           <div>
-            <label className="text-[12px] font-medium text-gray-700 mb-2 block">Token</label>
+            <label className={styles.label}>Token</label>
             <input
               type="text"
               value={authToken}
               onChange={(e) => setAuthToken(e.target.value)}
               placeholder="Enter token"
-              className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+              className={styles.input}
             />
           </div>
         )}
@@ -309,23 +312,23 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
         {authType === 'basic' && (
           <>
             <div>
-              <label className="text-[12px] font-medium text-gray-700 mb-2 block">Username</label>
+              <label className={styles.label}>Username</label>
               <input
                 type="text"
                 value={authUsername}
                 onChange={(e) => setAuthUsername(e.target.value)}
                 placeholder="Username"
-                className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+                className={styles.input}
               />
             </div>
             <div>
-              <label className="text-[12px] font-medium text-gray-700 mb-2 block">Password</label>
+              <label className={styles.label}>Password</label>
               <input
                 type="password"
                 value={authPassword}
                 onChange={(e) => setAuthPassword(e.target.value)}
                 placeholder="Password"
-                className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+                className={styles.input}
               />
             </div>
           </>
@@ -377,7 +380,7 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
           onClick={handleExecute}
           disabled={isLoading}
         >
-          <Play size={12} />
+          <Play size={styles.iconSize} />
           {isLoading ? 'Sending...' : 'Send'}
         </DetailButton>
       }
@@ -385,22 +388,18 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       activeRequestTab={activeTab}
       onRequestTabChange={(id) => setActiveTab(id as any)}
       responseStatus={
-        responseStatus !== null ? (
-          <span className={`text-[12px] font-medium ${
-            responseStatus < 400 ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {responseStatus}
-          </span>
-        ) : undefined
+        <UnifiedConnectionStatus
+          type="http"
+          status={responseStatus}
+        />
       }
       responseTime={responseTime ?? undefined}
       responseContent={
-        <div className="h-full">
-          <ResponseViewer 
-            response={response}
-            isLoading={isLoading}
-          />
-        </div>
+        <UnifiedResponse 
+          type="request-response"
+          response={response}
+          isLoading={isLoading}
+        />
       }
       responseActions={null}
     />
