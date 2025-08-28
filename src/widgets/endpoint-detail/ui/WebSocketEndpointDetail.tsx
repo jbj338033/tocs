@@ -37,9 +37,10 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
   const [activeTab, setActiveTab] = useState<'messages' | 'settings'>('messages')
   const wsRef = useRef<WebSocket | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageIdCounter = useRef(0)
 
   useEffect(() => {
-    const url = endpoint.wsUrl || endpoint.path || 'wss://echo.websocket.org'
+    const url = endpoint.wsUrl || endpoint.path || 'ws://localhost:3000'
     setWsUrl(url)
     
     if (endpoint.wsProtocol) {
@@ -60,7 +61,7 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
       const url = project.servers[0].url
       return url.replace(/^https?:/, 'wss:')
     }
-    return 'wss://api.example.com'
+    return 'ws://localhost:3000'
   }
 
   const replaceVariables = (text: string): string => {
@@ -129,7 +130,7 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
 
   const addMessage = (type: Message['type'], content: string) => {
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: `msg-${messageIdCounter.current++}`,
       type,
       content,
       timestamp: new Date()

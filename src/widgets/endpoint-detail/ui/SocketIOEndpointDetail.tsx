@@ -39,6 +39,7 @@ export function SocketIOEndpointDetail({ projectId, endpoint, variables, project
   const [activeTab, setActiveTab] = useState<'emit' | 'listeners'>('emit')
   const socketRef = useRef<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageIdCounter = useRef(0)
 
   useEffect(() => {
     const url = endpoint.wsUrl || endpoint.path || 'http://localhost:3000'
@@ -134,7 +135,7 @@ export function SocketIOEndpointDetail({ projectId, endpoint, variables, project
 
   const addMessage = (type: SocketIOMessage['type'], event: string, data?: unknown) => {
     const newMessage: SocketIOMessage = {
-      id: Date.now().toString(),
+      id: `msg-${messageIdCounter.current++}`,
       type,
       event,
       data,

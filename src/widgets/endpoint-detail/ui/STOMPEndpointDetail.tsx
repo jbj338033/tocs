@@ -46,6 +46,8 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
   const [password, setPassword] = useState('')
   const stompRef = useRef<Client | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messageIdCounter = useRef(0)
+  const subscriptionIdCounter = useRef(0)
 
   useEffect(() => {
     const url = endpoint.wsUrl || endpoint.path || 'ws://localhost:61614/stomp'
@@ -217,7 +219,7 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
     headers?: Record<string, string>
   ) => {
     const newMessage: STOMPMessage = {
-      id: Date.now().toString(),
+      id: `msg-${messageIdCounter.current++}`,
       type,
       command,
       destination,
@@ -230,7 +232,7 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
 
   const addSubscription = () => {
     setSubscriptions([...subscriptions, { 
-      id: Date.now().toString(),
+      id: `sub-${subscriptionIdCounter.current++}`,
       destination: '', 
       enabled: true 
     }])

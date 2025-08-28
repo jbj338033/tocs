@@ -37,6 +37,8 @@ export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: 
   const [isConnected, setIsConnected] = useState(false)
   const [messages, setMessages] = useState<MQTTMessage[]>([])
   const [activeTab, setActiveTab] = useState<'publish' | 'subscribe' | 'settings'>('publish')
+  const messageIdCounter = useRef(0)
+  const subscriptionIdCounter = useRef(0)
   
   const [publishTopic, setPublishTopic] = useState('')
   const [publishPayload, setPublishPayload] = useState('')
@@ -225,7 +227,7 @@ export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: 
     retained?: boolean
   ) => {
     const newMessage: MQTTMessage = {
-      id: Date.now().toString(),
+      id: `msg-${messageIdCounter.current++}`,
       type,
       topic,
       payload,
@@ -238,7 +240,7 @@ export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: 
 
   const addSubscription = () => {
     setSubscriptions([...subscriptions, { 
-      id: Date.now().toString(),
+      id: `sub-${subscriptionIdCounter.current++}`,
       topic: '', 
       qos: 0,
       enabled: true 

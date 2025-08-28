@@ -42,9 +42,11 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
   const [autoScroll, setAutoScroll] = useState(true)
   const eventSourceRef = useRef<EventSource | null>(null)
   const eventsEndRef = useRef<HTMLDivElement>(null)
+  const eventIdCounter = useRef(0)
+  const filterIdCounter = useRef(0)
 
   useEffect(() => {
-    const url = endpoint.path || 'https://api.example.com/events'
+    const url = endpoint.path || '/events'
     setSseUrl(url)
   }, [endpoint])
 
@@ -157,7 +159,7 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
 
   const addEvent = (eventType: string, data: string, eventId?: string, retry?: number) => {
     const newEvent: SSEEvent = {
-      id: Date.now().toString() + Math.random(),
+      id: `event-${eventIdCounter.current++}`,
       eventType,
       data,
       eventId,
@@ -188,7 +190,7 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
 
   const addEventFilter = () => {
     setEventFilters([...eventFilters, { 
-      id: Date.now().toString(),
+      id: `filter-${filterIdCounter.current++}`,
       eventType: '', 
       enabled: true 
     }])
