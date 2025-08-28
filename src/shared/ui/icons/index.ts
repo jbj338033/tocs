@@ -1,9 +1,7 @@
-// Navigation icons
 export * from './navigation/ChevronRight'
 export * from './navigation/ChevronDown'
 export * from './navigation/ArrowLeft'
 
-// Editor icons
 export * from './editor/Play'
 export * from './editor/Square'
 export * from './editor/Send'
@@ -15,15 +13,15 @@ export * from './editor/X'
 export * from './editor/Filter'
 export * from './editor/Download'
 export * from './editor/Save'
+export * from './editor/Maximize2'
+export * from './editor/Minimize2'
 
-// Protocol icons
 export * from './protocol/HttpIcon'
 export * from './protocol/GraphQLIcon'
 export * from './protocol/WebSocketIcon'
 export * from './protocol/SocketIOIcon'
 export * from './protocol/GRPCIcon'
 
-// General icons
 export * from './general/Search'
 export * from './general/Settings'
 export * from './general/Folder'
@@ -60,3 +58,5 @@ export * from './general/Package'
 export * from './general/CheckCircle'
 export * from './general/XCircle'
 export * from './general/Pencil'
+export * from './general/Tag'
+export * from './general/Shield'
