@@ -14,8 +14,9 @@ import { useProjectStore } from "@/shared/stores"
 interface SSEEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
 interface SSEEvent {
@@ -27,7 +28,7 @@ interface SSEEvent {
   timestamp: Date
 }
 
-export function SSEEndpointDetail({ projectId, endpoint, variables, project }: SSEEndpointDetailProps) {
+export function SSEEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: SSEEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [sseUrl, setSseUrl] = useState('')
   const [isConnected, setIsConnected] = useState(false)
@@ -210,7 +211,7 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
     setHeaders([...headers, { key: '', value: '', enabled: true }])
   }
 
-  const updateHeader = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
+  const updateHeader = (index: number, field: 'key' | 'value' | 'enabled' | 'description', value: string | boolean) => {
     const newHeaders = [...headers]
     newHeaders[index] = { ...newHeaders[index], [field]: value }
     setHeaders(newHeaders)
@@ -302,6 +303,7 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
         addLabel="+ Add Header"
         keyPlaceholder="Header name"
         valuePlaceholder="Value"
+        isReadOnly={isReadOnly}
       />
     </RequestSection>
   )
@@ -389,10 +391,11 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
       url={
         <VariableInput
           value={sseUrl}
-          onChange={isConnected ? () => {} : setSseUrl}
+          onChange={isConnected || isReadOnly ? () => {} : setSseUrl}
           variables={variables}
           placeholder="/events or /stream"
-          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          isReadOnly={isReadOnly}
         />
       }
       headerActions={
@@ -402,6 +405,7 @@ export function SSEEndpointDetail({ projectId, endpoint, variables, project }: S
           <DetailButton
             onClick={handleConnect}
             variant={isConnected ? 'danger' : 'primary'}
+            disabled={isReadOnly}
           >
             {isConnected ? (
               <>

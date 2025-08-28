@@ -16,8 +16,9 @@ import { useProjectStore } from "@/shared/stores"
 interface MQTTEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
 interface MQTTMessage {
@@ -30,7 +31,7 @@ interface MQTTMessage {
   timestamp: Date
 }
 
-export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: MQTTEndpointDetailProps) {
+export function MQTTEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: MQTTEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [mqttUrl, setMqttUrl] = useState('')
   const [clientId, setClientId] = useState(`tocs-${Date.now()}`)
@@ -533,10 +534,11 @@ export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: 
       url={
         <VariableInput
           value={mqttUrl}
-          onChange={isConnected ? () => {} : setMqttUrl}
+          onChange={isConnected || isReadOnly ? () => {} : setMqttUrl}
           variables={variables}
           placeholder={useTls ? "mqtts://broker.mqtt.com:8883" : "mqtt://localhost:1883"}
-          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          isReadOnly={isReadOnly}
         />
       }
       headerActions={
@@ -546,6 +548,7 @@ export function MQTTEndpointDetail({ projectId, endpoint, variables, project }: 
           <DetailButton
             onClick={handleConnect}
             variant={isConnected ? 'danger' : 'primary'}
+            disabled={isReadOnly}
           >
             {isConnected ? (
               <>

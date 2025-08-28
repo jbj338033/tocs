@@ -14,9 +14,10 @@ import { useProjectStore } from "@/shared/stores"
 interface ApisPanelProps {
   project: any
   onOpenOverview?: () => void
+  isReadOnly?: boolean
 }
 
-export function ApisPanel({ project, onOpenOverview }: ApisPanelProps) {
+export function ApisPanel({ project, onOpenOverview, isReadOnly = false }: ApisPanelProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["endpoints", "schemas"])
   )

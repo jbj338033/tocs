@@ -16,8 +16,9 @@ import { useProjectStore } from "@/shared/stores"
 interface STOMPEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
 interface STOMPMessage {
@@ -30,7 +31,7 @@ interface STOMPMessage {
   timestamp: Date
 }
 
-export function STOMPEndpointDetail({ projectId, endpoint, variables, project }: STOMPEndpointDetailProps) {
+export function STOMPEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: STOMPEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [stompUrl, setStompUrl] = useState('')
   const [isConnected, setIsConnected] = useState(false)
@@ -388,6 +389,7 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
         addLabel="+ Add Header"
         keyPlaceholder="Header name"
         valuePlaceholder="Value"
+        isReadOnly={isReadOnly}
       />
     </RequestSection>
   )
@@ -465,10 +467,11 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
       url={
         <VariableInput
           value={stompUrl}
-          onChange={isConnected ? () => {} : setStompUrl}
+          onChange={isConnected || isReadOnly ? () => {} : setStompUrl}
           variables={variables}
           placeholder="ws://localhost:61614/stomp"
-          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          isReadOnly={isReadOnly}
         />
       }
       headerActions={
@@ -477,6 +480,7 @@ export function STOMPEndpointDetail({ projectId, endpoint, variables, project }:
           <DetailButton
             onClick={handleConnect}
             variant={isConnected ? 'danger' : 'primary'}
+            disabled={isReadOnly}
           >
             {isConnected ? (
               <>

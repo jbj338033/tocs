@@ -9,9 +9,10 @@ import { SchemaApi } from "@/entities/schema";
 
 interface SchemasPanelProps {
   projectId: string;
+  isReadOnly?: boolean;
 }
 
-export function SchemasPanel({ projectId }: SchemasPanelProps) {
+export function SchemasPanel({ projectId, isReadOnly = false }: SchemasPanelProps) {
   const [loading, setLoading] = useState(true);
   const { schemas, selectedSchemaId, setSchemas, setSelectedSchema } = useSchemaStore();
   const { openModal } = useUIStore();

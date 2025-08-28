@@ -15,8 +15,9 @@ import { useProjectStore } from "@/shared/stores"
 interface SocketIOEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
 interface SocketIOMessage {
@@ -27,7 +28,7 @@ interface SocketIOMessage {
   timestamp: Date
 }
 
-export function SocketIOEndpointDetail({ projectId, endpoint, variables, project }: SocketIOEndpointDetailProps) {
+export function SocketIOEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: SocketIOEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [socketUrl, setSocketUrl] = useState('')
   const [isConnected, setIsConnected] = useState(false)
@@ -305,10 +306,11 @@ export function SocketIOEndpointDetail({ projectId, endpoint, variables, project
       url={
         <VariableInput
           value={socketUrl}
-          onChange={isConnected ? () => {} : setSocketUrl}
+          onChange={isConnected || isReadOnly ? () => {} : setSocketUrl}
           variables={variables}
           placeholder="http://localhost:3000"
-          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          isReadOnly={isReadOnly}
         />
       }
       headerActions={
@@ -317,6 +319,7 @@ export function SocketIOEndpointDetail({ projectId, endpoint, variables, project
           <DetailButton
             onClick={handleConnect}
             variant={isConnected ? 'danger' : 'primary'}
+            disabled={isReadOnly}
           >
             {isConnected ? (
               <>

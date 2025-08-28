@@ -14,6 +14,7 @@ interface SidebarProps {
   onCreateProject: () => void;
   user?: { name?: string | null; email?: string | null; image?: string | null };
   onOpenOverview?: () => void;
+  isReadOnly?: boolean;
 }
 
 export function Sidebar({
@@ -23,6 +24,7 @@ export function Sidebar({
   onCreateProject,
   user,
   onOpenOverview,
+  isReadOnly = false,
 }: SidebarProps) {
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -247,15 +249,15 @@ export function Sidebar({
 
         <div className="flex-1 bg-white overflow-hidden relative min-h-0">
           {currentProject && selectedSidebarTab === "apis" && (
-            <ApisPanel project={currentProject} onOpenOverview={onOpenOverview} />
+            <ApisPanel project={currentProject} onOpenOverview={onOpenOverview} isReadOnly={isReadOnly} />
           )}
 
           {currentProject && selectedSidebarTab === "variables" && (
-            <VariablesPanel projectId={currentProject.id} />
+            <VariablesPanel projectId={currentProject.id} isReadOnly={isReadOnly} />
           )}
 
           {currentProject && selectedSidebarTab === "history" && (
-            <HistoryPanel projectId={currentProject.id} />
+            <HistoryPanel projectId={currentProject.id} isReadOnly={isReadOnly} />
           )}
         </div>
       </div>

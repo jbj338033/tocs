@@ -16,11 +16,12 @@ import { useProjectStore } from "@/shared/stores"
 interface GraphQLEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
-export function GraphQLEndpointDetail({ projectId, endpoint, variables, project }: GraphQLEndpointDetailProps) {
+export function GraphQLEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: GraphQLEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [graphqlUrl, setGraphqlUrl] = useState('')
   const [query, setQuery] = useState('')
@@ -122,7 +123,7 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
     setHeaders([...headers, { key: '', value: '', enabled: true }])
   }
 
-  const updateHeader = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
+  const updateHeader = (index: number, field: 'key' | 'value' | 'enabled' | 'description', value: string | boolean) => {
     const newHeaders = [...headers]
     newHeaders[index] = { ...newHeaders[index], [field]: value }
     setHeaders(newHeaders)
@@ -189,6 +190,7 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
         onUpdate={updateHeader}
         onRemove={removeHeader}
         addLabel="+ Add Header"
+        isReadOnly={isReadOnly}
         keyPlaceholder="Header name"
         valuePlaceholder="Value"
       />

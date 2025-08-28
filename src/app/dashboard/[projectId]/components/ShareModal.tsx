@@ -15,7 +15,7 @@ export function ShareModal({ isOpen, onClose, project }: ShareModalProps) {
   const [copied, setCopied] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [members, setMembers] = useState<any[]>([])
-  const shareUrl = `${window.location.origin}/docs/${project?.id}`
+  const shareUrl = `${window.location.origin}/dashboard/${project?.id}`
 
   useEffect(() => {
     if (project?.members) {

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Save, Copy, Trash2 } from "@/shared/ui/icons"
-import { JsonEditor } from "@/shared/ui"
+import { JsonEditor } from "@/shared/ui/components/JsonEditor"
+import { EditorErrorBoundary } from "@/shared/ui/components/EditorErrorBoundary"
 import { Tab } from "@/shared/stores"
 import { SchemaApi } from "@/entities/schema"
 import { useAutoSave } from "@/shared/hooks/useAutoSave"
@@ -164,10 +165,12 @@ export function SchemaTabContent({ tab, onUpdate, project }: SchemaTabContentPro
       <div className="flex-1 overflow-hidden">
         <div className="h-full p-4">
           <div className="h-full border border-gray-200 rounded-lg overflow-hidden">
-            <JsonEditor
-              value={schemaData.schema}
-              onChange={handleSchemaChange}
-            />
+            <EditorErrorBoundary>
+              <JsonEditor
+                value={schemaData.schema}
+                onChange={handleSchemaChange}
+              />
+            </EditorErrorBoundary>
           </div>
         </div>
       </div>

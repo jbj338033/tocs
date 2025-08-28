@@ -14,11 +14,12 @@ import { useProjectStore } from "@/shared/stores"
 interface GRPCEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
-export function GRPCEndpointDetail({ projectId, endpoint, variables, project }: GRPCEndpointDetailProps) {
+export function GRPCEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: GRPCEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [serverUrl, setServerUrl] = useState('')
   const [metadata, setMetadata] = useState<Array<{ key: string; value: string; enabled: boolean }>>([
@@ -102,7 +103,7 @@ export function GRPCEndpointDetail({ projectId, endpoint, variables, project }: 
     setMetadata([...metadata, { key: '', value: '', enabled: true }])
   }
 
-  const updateMetadata = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
+  const updateMetadata = (index: number, field: 'key' | 'value' | 'enabled' | 'description', value: string | boolean) => {
     const newMetadata = [...metadata]
     newMetadata[index] = { ...newMetadata[index], [field]: value }
     setMetadata(newMetadata)
@@ -200,6 +201,7 @@ message User {
         addLabel="+ Add Metadata"
         keyPlaceholder="Metadata key"
         valuePlaceholder="Value"
+        isReadOnly={isReadOnly}
       />
     </RequestSection>
   )
@@ -232,6 +234,7 @@ message User {
           variables={variables}
           placeholder="localhost:50051"
           className="w-full px-3 py-1.5 text-[13px] font-mono border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+          isReadOnly={isReadOnly}
         />
       }
       headerActions={
@@ -239,7 +242,7 @@ message User {
           <Server size={14} className="text-gray-400" />
           <DetailButton
             onClick={handleExecute}
-            disabled={isLoading || !serviceName || !methodName}
+            disabled={isLoading || !serviceName || !methodName || isReadOnly}
           >
             <Play size={12} />
             {isLoading ? 'Calling...' : 'Call'}

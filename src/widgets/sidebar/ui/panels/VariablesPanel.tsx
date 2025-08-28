@@ -9,9 +9,10 @@ import { useToast } from "@/shared/hooks/useToast";
 
 interface VariablesPanelProps {
   projectId: string;
+  isReadOnly?: boolean;
 }
 
-export function VariablesPanel({ projectId }: VariablesPanelProps) {
+export function VariablesPanel({ projectId, isReadOnly = false }: VariablesPanelProps) {
   const { variables, setVariables, selectedVariableId, setSelectedVariable } = useVariableStore();
   const [isAdding, setIsAdding] = useState(false);
   const [newVariable, setNewVariable] = useState({ key: "", value: "" });
@@ -99,12 +100,14 @@ export function VariablesPanel({ projectId }: VariablesPanelProps) {
           <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-900">Variables</h3>
-          <button
-            onClick={() => setIsAdding(true)}
-            className="text-blue hover:bg-blue-50 p-1 rounded transition-colors"
-          >
-            <Plus size={16} />
-          </button>
+          {!isReadOnly && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="text-blue hover:bg-blue-50 p-1 rounded transition-colors"
+            >
+              <Plus size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -149,12 +152,14 @@ export function VariablesPanel({ projectId }: VariablesPanelProps) {
         {variables.length === 0 && !isAdding ? (
           <div className="text-center py-8">
             <p className="text-sm text-gray-500 mb-3">No variables yet</p>
-            <button
-              onClick={() => setIsAdding(true)}
-              className="text-sm text-blue hover:text-blue-600"
-            >
-              Add your first variable
-            </button>
+            {!isReadOnly && (
+              <button
+                onClick={() => setIsAdding(true)}
+                className="text-sm text-blue hover:text-blue-600"
+              >
+                Add your first variable
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-2">
@@ -217,20 +222,24 @@ export function VariablesPanel({ projectId }: VariablesPanelProps) {
                         >
                           <Copy size={14} />
                         </button>
-                        <button
-                          onClick={() => setEditingId(variable.id)}
-                          className="p-1 text-gray-400 hover:text-gray-600"
-                          title="Edit"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(variable.id)}
-                          className="p-1 text-gray-400 hover:text-red-600"
-                          title="Delete"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {!isReadOnly && (
+                          <>
+                            <button
+                              onClick={() => setEditingId(variable.id)}
+                              className="p-1 text-gray-400 hover:text-gray-600"
+                              title="Edit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(variable.id)}
+                              className="p-1 text-gray-400 hover:text-red-600"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                     <p className="text-sm text-gray-600">{variable.value}</p>

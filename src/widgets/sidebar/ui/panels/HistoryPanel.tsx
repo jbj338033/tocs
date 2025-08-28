@@ -8,9 +8,10 @@ import { LoadingState, ErrorMessage } from "@/shared/ui";
 
 interface HistoryPanelProps {
   projectId: string;
+  isReadOnly?: boolean;
 }
 
-export function HistoryPanel({ projectId }: HistoryPanelProps) {
+export function HistoryPanel({ projectId, isReadOnly = false }: HistoryPanelProps) {
   const { histories, selectedHistoryId, setHistories, setSelectedHistory } = useHistoryStore();
   const { openEndpoint } = useTabStore();
   const [loading, setLoading] = useState(true);

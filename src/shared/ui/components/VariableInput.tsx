@@ -15,6 +15,7 @@ interface VariableInputProps {
   variables?: Variable[]
   className?: string
   multiline?: boolean
+  isReadOnly?: boolean
 }
 
 export function VariableInput({ 
@@ -23,7 +24,8 @@ export function VariableInput({
   placeholder = "", 
   variables = [], 
   className = "",
-  multiline = false
+  multiline = false,
+  isReadOnly = false
 }: VariableInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [cursorPosition, setCursorPosition] = useState(0)
@@ -180,10 +182,11 @@ export function VariableInput({
   const inputProps = {
     ref: inputRef as any,
     value,
-    onChange: handleInputChange,
-    onKeyDown: handleKeyDown,
+    onChange: isReadOnly ? undefined : handleInputChange,
+    onKeyDown: isReadOnly ? undefined : handleKeyDown,
     placeholder,
-    className: `w-full px-3 py-2 bg-transparent relative z-10 ${className}`
+    readOnly: isReadOnly,
+    className: `w-full px-3 py-2 bg-transparent relative z-10 ${className} ${isReadOnly ? 'cursor-default' : ''}`
   }
 
   return (
@@ -197,7 +200,7 @@ export function VariableInput({
         )}
       </div>
       
-      {showSuggestions && filteredVariables.length > 0 && (
+      {!isReadOnly && showSuggestions && filteredVariables.length > 0 && (
         <div
           ref={suggestionsRef}
           className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-64 overflow-y-auto"

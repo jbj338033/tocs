@@ -15,8 +15,9 @@ import { useProjectStore } from "@/shared/stores"
 interface WebSocketEndpointDetailProps {
   projectId: string
   endpoint: Endpoint
-  variables: Variable[]
-  project: Project
+  variables?: Variable[]
+  project?: Project
+  isReadOnly?: boolean
 }
 
 interface Message {
@@ -26,7 +27,7 @@ interface Message {
   timestamp: Date
 }
 
-export function WebSocketEndpointDetail({ projectId, endpoint, variables, project }: WebSocketEndpointDetailProps) {
+export function WebSocketEndpointDetail({ projectId, endpoint, variables = [], project, isReadOnly = false }: WebSocketEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [wsUrl, setWsUrl] = useState('')
   const [isConnected, setIsConnected] = useState(false)

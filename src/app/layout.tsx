@@ -25,6 +25,17 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable}>
       <body className={pretendard.className}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prevent jQuery conflicts with Monaco Editor
+              if (typeof window !== 'undefined' && window.$) {
+                window.__original$ = window.$;
+                delete window.$;
+              }
+            `,
+          }}
+        />
         <SessionProvider>
           <QueryProvider>
             {children}

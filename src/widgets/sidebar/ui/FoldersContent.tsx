@@ -44,6 +44,7 @@ interface FoldersContentProps {
   onCreateEndpoint?: (endpoint: any) => void
   activeEndpointId?: string
   hideActions?: boolean
+  isReadOnly?: boolean
 }
 
 export function FoldersContent({
@@ -52,6 +53,7 @@ export function FoldersContent({
   onCreateEndpoint,
   activeEndpointId,
   hideActions = false,
+  isReadOnly = false,
 }: FoldersContentProps) {
   const { 
     folders, 

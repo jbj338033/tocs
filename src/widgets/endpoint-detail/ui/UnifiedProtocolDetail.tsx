@@ -123,57 +123,103 @@ export function KeyValueEditor({
   addLabel = '+ Add Item',
   keyPlaceholder = 'Key',
   valuePlaceholder = 'Value',
-  showCheckbox = true
+  showCheckbox = true,
+  showDescription = false,
+  isReadOnly = false
 }: {
-  items: Array<{ key: string; value: string; enabled: boolean }>
+  items: Array<{ key: string; value: string; enabled: boolean; description?: string }>
   onAdd: () => void
-  onUpdate: (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => void
+  onUpdate: (index: number, field: 'key' | 'value' | 'enabled' | 'description', value: string | boolean) => void
   onRemove: (index: number) => void
   addLabel?: string
   keyPlaceholder?: string
   valuePlaceholder?: string
   showCheckbox?: boolean
+  showDescription?: boolean
+  isReadOnly?: boolean
 }) {
   return (
-    <div className="p-4 space-y-2">
-      {items.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
-          {showCheckbox && (
-            <input
-              type="checkbox"
-              checked={item.enabled}
-              onChange={(e) => onUpdate(index, 'enabled', e.target.checked)}
-              className="w-3.5 h-3.5 rounded border-gray-200 text-[#0064FF] focus:ring-0 focus:ring-offset-0"
-            />
-          )}
-          <input
-            type="text"
-            value={item.key}
-            onChange={(e) => onUpdate(index, 'key', e.target.value)}
-            placeholder={keyPlaceholder}
-            className="flex-1 px-2.5 py-1.5 text-[12px] bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] border border-transparent hover:border-gray-100 focus:border-[#0064FF] rounded transition-all"
-          />
-          <input
-            type="text"
-            value={item.value}
-            onChange={(e) => onUpdate(index, 'value', e.target.value)}
-            placeholder={valuePlaceholder}
-            className="flex-1 px-2.5 py-1.5 text-[12px] bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] border border-transparent hover:border-gray-100 focus:border-[#0064FF] rounded transition-all"
-          />
+    <div className="w-full">
+      {/* Table Header */}
+      <div className="border-b border-gray-100">
+        <div className="flex items-center px-4 py-2 text-[11px] font-medium text-gray-500">
+          {showCheckbox && <div className="w-8" />}
+          <div className="flex-1 px-2">Key</div>
+          <div className="flex-1 px-2">Value</div>
+          {showDescription && <div className="flex-1 px-2">Description</div>}
+          <div className="w-8" />
+        </div>
+      </div>
+      
+      {/* Table Body */}
+      <div className="divide-y divide-gray-50">
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center px-4 py-1.5 hover:bg-gray-50 group">
+            {showCheckbox && (
+              <div className="w-8 flex items-center">
+                <input
+                  type="checkbox"
+                  checked={item.enabled}
+                  onChange={(e) => onUpdate(index, 'enabled', e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-gray-200 text-[#0064FF] focus:ring-0 focus:ring-offset-0"
+                />
+              </div>
+            )}
+            <div className="flex-1 px-2">
+              <input
+                type="text"
+                value={item.key}
+                onChange={(e) => onUpdate(index, 'key', e.target.value)}
+                placeholder={keyPlaceholder}
+                className="w-full px-2 py-1 text-[12px] bg-transparent hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] border border-transparent hover:border-gray-100 focus:border-[#0064FF] rounded transition-all"
+              />
+            </div>
+            <div className="flex-1 px-2">
+              <input
+                type="text"
+                value={item.value}
+                onChange={(e) => onUpdate(index, 'value', e.target.value)}
+                placeholder={valuePlaceholder}
+                className="w-full px-2 py-1 text-[12px] bg-transparent hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] border border-transparent hover:border-gray-100 focus:border-[#0064FF] rounded transition-all"
+              />
+            </div>
+            {showDescription && (
+              <div className="flex-1 px-2">
+                <input
+                  type="text"
+                  value={item.description || ''}
+                  onChange={(e) => onUpdate(index, 'description', e.target.value)}
+                  placeholder="Description"
+                  className="w-full px-2 py-1 text-[12px] bg-transparent hover:bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] border border-transparent hover:border-gray-100 focus:border-[#0064FF] rounded transition-all"
+                />
+              </div>
+            )}
+            {!isReadOnly && (
+              <div className="w-8 flex items-center justify-center">
+                <button
+                  onClick={() => onRemove(index)}
+                  className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            {isReadOnly && <div className="w-8" />}
+          </div>
+        ))}
+      </div>
+      
+      {/* Add Button */}
+      {!isReadOnly && (
+        <div className="px-4 py-2">
           <button
-            onClick={() => onRemove(index)}
-            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all"
+            onClick={onAdd}
+            className="text-[12px] text-[#0064FF] hover:text-[#0050C8] font-medium"
           >
-            ×
+            {addLabel}
           </button>
         </div>
-      ))}
-      <button
-        onClick={onAdd}
-        className="text-[12px] text-[#0064FF] hover:text-[#0050C8] font-medium pt-1"
-      >
-        {addLabel}
-      </button>
+      )}
     </div>
   )
 }

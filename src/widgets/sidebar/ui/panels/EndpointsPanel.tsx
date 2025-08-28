@@ -6,9 +6,10 @@ import { EndpointApi } from "@/entities/folder";
 
 interface EndpointsPanelProps {
   projectId: string;
+  isReadOnly?: boolean;
 }
 
-export function EndpointsPanel({ projectId }: EndpointsPanelProps) {
+export function EndpointsPanel({ projectId, isReadOnly = false }: EndpointsPanelProps) {
   const { activeTabId, tabs, openEndpoint } = useTabStore();
   
   // Get active endpoint ID from tabs
@@ -30,6 +31,7 @@ export function EndpointsPanel({ projectId }: EndpointsPanelProps) {
       onEndpointSelect={handleEndpointSelect}
       activeEndpointId={activeEndpointId}
       hideActions={true}
+      isReadOnly={isReadOnly}
     />
   );
 }
