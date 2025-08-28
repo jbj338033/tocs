@@ -144,7 +144,7 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
             variables={variables}
           />
         </div>
-        <div className="px-4 pb-4">
+        <div className="px-4 py-2.5 border-t border-gray-100">
           <div className="flex gap-2">
             <DetailButton
               onClick={() => setQuery('query {\n  \n}')}

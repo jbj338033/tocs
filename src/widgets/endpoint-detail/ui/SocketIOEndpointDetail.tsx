@@ -181,7 +181,7 @@ export function SocketIOEndpointDetail({ projectId, endpoint, variables, project
               value={eventName}
               onChange={(e) => setEventName(e.target.value)}
               placeholder="Event name (e.g., message, chat)"
-              className="flex-1 px-3 py-1.5 text-[12px] border border-gray-100 rounded focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+              className="flex-1 px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
             />
             <DetailButton
               onClick={handleEmit}

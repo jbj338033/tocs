@@ -9,9 +9,7 @@ import { DetailButton, ProtocolBadge, ConnectionStatus, IconButton } from "@/sha
 import { Variable } from "@/entities/variable"
 import { Project } from "@/entities/project"
 import { interpolateVariables } from "@/shared/lib/variables"
-import { UnifiedProtocolDetail, RequestSection, ResponseSection } from "./UnifiedProtocolDetail"
-import { UnifiedResponse } from "./UnifiedResponse"
-import { styles } from "./styles"
+import { UnifiedProtocolDetail, RequestSection, ResponseSection, MessageList } from "./UnifiedProtocolDetail"
 import { useProjectStore } from "@/shared/stores"
 
 interface WebSocketEndpointDetailProps {
@@ -158,9 +156,9 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
   const MessagesContent = (
     <RequestSection>
       <div className="h-full flex flex-col">
-        <div className={`${styles.contentPadding} ${styles.sectionSpacing} flex-1`}>
+        <div className="p-4 space-y-4 flex-1">
           <div className="space-y-2">
-            <label className={styles.label}>Send Message</label>
+            <label className="text-[12px] font-medium text-gray-700">Send Message</label>
             <div className="h-[120px]">
               <CodeEditor
                 value={messageInput}
@@ -175,7 +173,7 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
               disabled={!isConnected || !messageInput.trim()}
               className="w-full"
             >
-              <Send size={styles.iconSize} />
+              <Send size={12} />
               Send Message
             </DetailButton>
           </div>
@@ -293,22 +291,20 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
         )
       }
       responseContent={
-        <>
-          <UnifiedResponse 
-            type="streaming"
-            messages={messages}
-            showStats={true}
-            stats={{
-              total: messages.length,
-              sent: messages.filter(m => m.type === 'sent').length,
-              received: messages.filter(m => m.type === 'received').length
-            }}
-            onClear={clearMessages}
-          />
+        <ResponseSection>
+          <MessageList messages={messages} className="bg-gray-50 -m-4" />
           <div ref={messagesEndRef} />
-        </>
+        </ResponseSection>
       }
-      responseActions={null}
+      responseActions={
+        <IconButton
+          onClick={clearMessages}
+          title="Clear messages"
+          size="sm"
+        >
+          <Trash2 size={12} />
+        </IconButton>
+      }
     />
   )
 }
