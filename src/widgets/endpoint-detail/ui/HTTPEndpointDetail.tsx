@@ -12,6 +12,8 @@ import { DetailButton, ProtocolBadge, IconButton } from "@/shared/ui/components"
 import { Play, Copy } from "@/shared/ui/icons"
 import { interpolateVariables } from "@/shared/lib/variables"
 import { UnifiedProtocolDetail, RequestSection, ResponseSection, KeyValueEditor } from "./UnifiedProtocolDetail"
+import { AuthorizationTab, applyAuthorization, type Authorization } from "./AuthorizationTab"
+import { DocumentationTab } from "./DocumentationTab"
 import { useProjectStore } from "@/shared/stores"
 
 interface HTTPEndpointDetailProps {
@@ -24,7 +26,7 @@ interface HTTPEndpointDetailProps {
 export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: HTTPEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [httpUrl, setHttpUrl] = useState('')
-  const [activeTab, setActiveTab] = useState<'params' | 'headers' | 'body'>('params')
+  const [activeTab, setActiveTab] = useState<'params' | 'authorization' | 'headers' | 'body' | 'cookies' | 'docs'>('params')
   const [response, setResponse] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [responseTime, setResponseTime] = useState<number | null>(null)
@@ -38,6 +40,9 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ])
   const [body, setBody] = useState('')
+  const [authorization, setAuthorization] = useState<Authorization>({ type: 'none' })
+  const [cookies, setCookies] = useState<Array<{ key: string; value: string; enabled: boolean }>>([])
+  const [documentation, setDocumentation] = useState('')
 
   useEffect(() => {
     const initialParams = endpoint.parameters?.map(param => ({
@@ -92,6 +97,11 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       }
     })
     
+    // Apply API key to query params if configured
+    if (authorization.type === 'apikey' && authorization.addTo === 'query' && authorization.key && authorization.value) {
+      url.searchParams.append(authorization.key, interpolateVariables(authorization.value, variables))
+    }
+    
     return url.toString()
   }
 
@@ -111,6 +121,17 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
           enabledHeaders[header.key] = interpolateVariables(header.value, variables)
         }
       })
+      
+      // Apply authorization
+      applyAuthorization(authorization, enabledHeaders, variables)
+      
+      // Apply cookies
+      const enabledCookies = cookies.filter(c => c.enabled && c.key)
+      if (enabledCookies.length > 0) {
+        enabledHeaders['Cookie'] = enabledCookies
+          .map(c => `${c.key}=${interpolateVariables(c.value, variables)}`)
+          .join('; ')
+      }
       
       let requestBody
       if (['POST', 'PUT', 'PATCH'].includes(endpoint.method || '')) {
@@ -221,6 +242,20 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
   const removeHeader = (index: number) => {
     setHeaders(headers.filter((_, i) => i !== index))
   }
+  
+  const addCookie = () => {
+    setCookies([...cookies, { key: '', value: '', enabled: true }])
+  }
+
+  const updateCookie = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
+    const newCookies = [...cookies]
+    newCookies[index] = { ...newCookies[index], [field]: value }
+    setCookies(newCookies)
+  }
+
+  const removeCookie = (index: number) => {
+    setCookies(cookies.filter((_, i) => i !== index))
+  }
 
   const ParamsContent = (
     <RequestSection>
@@ -262,6 +297,36 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       </div>
     </RequestSection>
   )
+  
+  const AuthorizationContent = (
+    <AuthorizationTab
+      authorization={authorization}
+      setAuthorization={setAuthorization}
+      variables={variables}
+    />
+  )
+  
+  const CookiesContent = (
+    <RequestSection>
+      <KeyValueEditor
+        items={cookies}
+        onAdd={addCookie}
+        onUpdate={updateCookie}
+        onRemove={removeCookie}
+        addLabel="+ Add Cookie"
+        keyPlaceholder="Cookie name"
+        valuePlaceholder="Value"
+      />
+    </RequestSection>
+  )
+  
+  const DocumentationContent = (
+    <DocumentationTab
+      endpoint={endpoint}
+      documentation={documentation}
+      setDocumentation={setDocumentation}
+    />
+  )
 
 
   const shouldShowBody = ['POST', 'PUT', 'PATCH'].includes(endpoint.method || '')
@@ -273,6 +338,11 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       content: ParamsContent
     },
     {
+      id: 'authorization',
+      label: 'Authorization',
+      content: AuthorizationContent
+    },
+    {
       id: 'headers',
       label: 'Headers',
       content: HeadersContent
@@ -281,7 +351,17 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       id: 'body',
       label: 'Body',
       content: BodyContent
-    }] : [])
+    }] : []),
+    {
+      id: 'cookies',
+      label: 'Cookies',
+      content: CookiesContent
+    },
+    {
+      id: 'docs',
+      label: 'Documentation',
+      content: DocumentationContent
+    }
   ]
 
   return (
