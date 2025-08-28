@@ -12,8 +12,6 @@ import { DetailButton, ProtocolBadge, IconButton } from "@/shared/ui/components"
 import { Play, Copy } from "@/shared/ui/icons"
 import { interpolateVariables } from "@/shared/lib/variables"
 import { UnifiedProtocolDetail, RequestSection, ResponseSection, KeyValueEditor } from "./UnifiedProtocolDetail"
-import { AuthorizationTab, applyAuthorization, type Authorization } from "./AuthorizationTab"
-import { DocumentationTab } from "./DocumentationTab"
 import { useProjectStore } from "@/shared/stores"
 
 interface HTTPEndpointDetailProps {
@@ -26,7 +24,7 @@ interface HTTPEndpointDetailProps {
 export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: HTTPEndpointDetailProps) {
   const { getSelectedServerUrl } = useProjectStore()
   const [httpUrl, setHttpUrl] = useState('')
-  const [activeTab, setActiveTab] = useState<'params' | 'authorization' | 'headers' | 'body' | 'cookies' | 'docs'>('params')
+  const [activeTab, setActiveTab] = useState<'params' | 'headers' | 'body' | 'auth'>('params')
   const [response, setResponse] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [responseTime, setResponseTime] = useState<number | null>(null)
@@ -40,9 +38,10 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ])
   const [body, setBody] = useState('')
-  const [authorization, setAuthorization] = useState<Authorization>({ type: 'none' })
-  const [cookies, setCookies] = useState<Array<{ key: string; value: string; enabled: boolean }>>([])
-  const [documentation, setDocumentation] = useState('')
+  const [authType, setAuthType] = useState<'none' | 'bearer' | 'basic'>('none')
+  const [authToken, setAuthToken] = useState('')
+  const [authUsername, setAuthUsername] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
 
   useEffect(() => {
     const initialParams = endpoint.parameters?.map(param => ({
@@ -97,10 +96,6 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       }
     })
     
-    // Apply API key to query params if configured
-    if (authorization.type === 'apikey' && authorization.addTo === 'query' && authorization.key && authorization.value) {
-      url.searchParams.append(authorization.key, interpolateVariables(authorization.value, variables))
-    }
     
     return url.toString()
   }
@@ -123,15 +118,13 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       })
       
       // Apply authorization
-      applyAuthorization(authorization, enabledHeaders, variables)
-      
-      // Apply cookies
-      const enabledCookies = cookies.filter(c => c.enabled && c.key)
-      if (enabledCookies.length > 0) {
-        enabledHeaders['Cookie'] = enabledCookies
-          .map(c => `${c.key}=${interpolateVariables(c.value, variables)}`)
-          .join('; ')
+      if (authType === 'bearer' && authToken) {
+        enabledHeaders['Authorization'] = `Bearer ${interpolateVariables(authToken, variables)}`
+      } else if (authType === 'basic' && authUsername && authPassword) {
+        const credentials = btoa(`${authUsername}:${authPassword}`)
+        enabledHeaders['Authorization'] = `Basic ${credentials}`
       }
+      
       
       let requestBody
       if (['POST', 'PUT', 'PATCH'].includes(endpoint.method || '')) {
@@ -242,20 +235,6 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
   const removeHeader = (index: number) => {
     setHeaders(headers.filter((_, i) => i !== index))
   }
-  
-  const addCookie = () => {
-    setCookies([...cookies, { key: '', value: '', enabled: true }])
-  }
-
-  const updateCookie = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
-    const newCookies = [...cookies]
-    newCookies[index] = { ...newCookies[index], [field]: value }
-    setCookies(newCookies)
-  }
-
-  const removeCookie = (index: number) => {
-    setCookies(cookies.filter((_, i) => i !== index))
-  }
 
   const ParamsContent = (
     <RequestSection>
@@ -298,34 +277,61 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
     </RequestSection>
   )
   
-  const AuthorizationContent = (
-    <AuthorizationTab
-      authorization={authorization}
-      setAuthorization={setAuthorization}
-      variables={variables}
-    />
-  )
-  
-  const CookiesContent = (
+  const AuthContent = (
     <RequestSection>
-      <KeyValueEditor
-        items={cookies}
-        onAdd={addCookie}
-        onUpdate={updateCookie}
-        onRemove={removeCookie}
-        addLabel="+ Add Cookie"
-        keyPlaceholder="Cookie name"
-        valuePlaceholder="Value"
-      />
+      <div className="p-4 space-y-4">
+        <div>
+          <label className="text-[12px] font-medium text-gray-700 mb-2 block">Auth Type</label>
+          <select
+            value={authType}
+            onChange={(e) => setAuthType(e.target.value as any)}
+            className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+          >
+            <option value="none">No Auth</option>
+            <option value="bearer">Bearer Token</option>
+            <option value="basic">Basic Auth</option>
+          </select>
+        </div>
+        
+        {authType === 'bearer' && (
+          <div>
+            <label className="text-[12px] font-medium text-gray-700 mb-2 block">Token</label>
+            <input
+              type="text"
+              value={authToken}
+              onChange={(e) => setAuthToken(e.target.value)}
+              placeholder="Enter token"
+              className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+            />
+          </div>
+        )}
+        
+        {authType === 'basic' && (
+          <>
+            <div>
+              <label className="text-[12px] font-medium text-gray-700 mb-2 block">Username</label>
+              <input
+                type="text"
+                value={authUsername}
+                onChange={(e) => setAuthUsername(e.target.value)}
+                placeholder="Username"
+                className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+              />
+            </div>
+            <div>
+              <label className="text-[12px] font-medium text-gray-700 mb-2 block">Password</label>
+              <input
+                type="password"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full px-3 py-1.5 text-[12px] border border-gray-100 rounded bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF]"
+              />
+            </div>
+          </>
+        )}
+      </div>
     </RequestSection>
-  )
-  
-  const DocumentationContent = (
-    <DocumentationTab
-      endpoint={endpoint}
-      documentation={documentation}
-      setDocumentation={setDocumentation}
-    />
   )
 
 
@@ -338,9 +344,9 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       content: ParamsContent
     },
     {
-      id: 'authorization',
-      label: 'Authorization',
-      content: AuthorizationContent
+      id: 'auth',
+      label: 'Auth',
+      content: AuthContent
     },
     {
       id: 'headers',
@@ -351,17 +357,7 @@ export function HTTPEndpointDetail({ projectId, endpoint, variables, project }: 
       id: 'body',
       label: 'Body',
       content: BodyContent
-    }] : []),
-    {
-      id: 'cookies',
-      label: 'Cookies',
-      content: CookiesContent
-    },
-    {
-      id: 'docs',
-      label: 'Documentation',
-      content: DocumentationContent
-    }
+    }] : [])
   ]
 
   return (

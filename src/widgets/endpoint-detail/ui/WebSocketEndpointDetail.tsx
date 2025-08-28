@@ -277,7 +277,7 @@ export function WebSocketEndpointDetail({ projectId, endpoint, variables, projec
           value={wsUrl}
           onChange={isConnected ? () => {} : setWsUrl}
           variables={variables}
-          placeholder="wss://echo.websocket.org"
+          placeholder="ws://localhost:3000"
           className={`w-full px-3 py-1.5 text-[13px] border border-gray-100 rounded bg-gray-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#0064FF] focus:border-[#0064FF] ${isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
         />
       }

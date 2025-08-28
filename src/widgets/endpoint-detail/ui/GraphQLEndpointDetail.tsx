@@ -11,8 +11,6 @@ import { Variable } from "@/entities/variable"
 import { Project } from "@/entities/project"
 import { interpolateVariables } from "@/shared/lib/variables"
 import { UnifiedProtocolDetail, RequestSection, ResponseSection, KeyValueEditor } from "./UnifiedProtocolDetail"
-import { AuthorizationTab, applyAuthorization, type Authorization } from "./AuthorizationTab"
-import { DocumentationTab } from "./DocumentationTab"
 import { useProjectStore } from "@/shared/stores"
 
 interface GraphQLEndpointDetailProps {
@@ -31,21 +29,10 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
   const [isLoading, setIsLoading] = useState(false)
   const [responseTime, setResponseTime] = useState<number | null>(null)
   const [responseStatus, setResponseStatus] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<'query' | 'variables' | 'authorization' | 'headers' | 'cookies' | 'docs'>('query')
+  const [activeTab, setActiveTab] = useState<'query' | 'variables' | 'headers'>('query')
   const [headers, setHeaders] = useState<Array<{ key: string; value: string; enabled: boolean }>>([
     { key: 'Content-Type', value: 'application/json', enabled: true }
   ])
-  const [authorization, setAuthorization] = useState<{
-    type: 'none' | 'bearer' | 'basic' | 'apikey'
-    token?: string
-    username?: string
-    password?: string
-    key?: string
-    value?: string
-    addTo?: 'header' | 'query'
-  }>({ type: 'none' })
-  const [cookies, setCookies] = useState<Array<{ key: string; value: string; enabled: boolean }>>([])
-  const [documentation, setDocumentation] = useState('')
 
   useEffect(() => {
     if (endpoint.query) {
@@ -90,16 +77,6 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
         }
       })
       
-      // Apply authorization
-      applyAuthorization(authorization, enabledHeaders, variables)
-      
-      // Apply cookies
-      const enabledCookies = cookies.filter(c => c.enabled && c.key)
-      if (enabledCookies.length > 0) {
-        enabledHeaders['Cookie'] = enabledCookies
-          .map(c => `${c.key}=${replaceVariables(c.value)}`)
-          .join('; ')
-      }
       
       const proxyRes = await fetch('/api/proxy', {
         method: 'POST',
@@ -155,19 +132,6 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
     setHeaders(headers.filter((_, i) => i !== index))
   }
   
-  const addCookie = () => {
-    setCookies([...cookies, { key: '', value: '', enabled: true }])
-  }
-
-  const updateCookie = (index: number, field: 'key' | 'value' | 'enabled', value: string | boolean) => {
-    const newCookies = [...cookies]
-    newCookies[index] = { ...newCookies[index], [field]: value }
-    setCookies(newCookies)
-  }
-
-  const removeCookie = (index: number) => {
-    setCookies(cookies.filter((_, i) => i !== index))
-  }
 
   const QueryContent = (
     <RequestSection>
@@ -231,35 +195,6 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
     </RequestSection>
   )
   
-  const AuthorizationContent = (
-    <AuthorizationTab
-      authorization={authorization}
-      setAuthorization={setAuthorization}
-      variables={variables}
-    />
-  )
-  
-  const CookiesContent = (
-    <RequestSection>
-      <KeyValueEditor
-        items={cookies}
-        onAdd={addCookie}
-        onUpdate={updateCookie}
-        onRemove={removeCookie}
-        addLabel="+ Add Cookie"
-        keyPlaceholder="Cookie name"
-        valuePlaceholder="Value"
-      />
-    </RequestSection>
-  )
-  
-  const DocumentationContent = (
-    <DocumentationTab
-      endpoint={endpoint}
-      documentation={documentation}
-      setDocumentation={setDocumentation}
-    />
-  )
 
   const requestTabs = [
     {
@@ -273,24 +208,9 @@ export function GraphQLEndpointDetail({ projectId, endpoint, variables, project 
       content: VariablesContent
     },
     {
-      id: 'authorization',
-      label: 'Authorization',
-      content: AuthorizationContent
-    },
-    {
       id: 'headers',
       label: 'Headers',
       content: HeadersContent
-    },
-    {
-      id: 'cookies',
-      label: 'Cookies',
-      content: CookiesContent
-    },
-    {
-      id: 'docs',
-      label: 'Documentation',
-      content: DocumentationContent
     }
   ]
 
